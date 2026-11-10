@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Envio de Documentos - Processo Seletivo PDS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Estilos da Barra de Progresso */
+    #progresso-container {
+      display: none;
+      margin-top: 24px;
+      padding: 16px;
+      background: #F8F9FA;
+      border: 1px solid var(--linha);
+      border-radius: 6px;
+    }
+    .progresso-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tinta);
+      margin-bottom: 8px;
+    }
+    .progresso-fundo {
+      width: 100%;
+      background: #E9ECEF;
+      border-radius: 8px;
+      height: 10px;
+      overflow: hidden;
+    }
+    #progresso-barra {
+      width: 0%;
+      height: 100%;
+      background: var(--tinta);
+      transition: width 0.4s ease;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="container">
+      <h1>PROGRAMA DE PÓS-GRADUAÇÃO EM DESIGN | PDS</h1>
+      <p class="sub">Envio de Documentação Comprobatória - Processo Seletivo</p>
+    </div>
+  </header>
+
+  <section id="instrucoes">
+    <div class="container">
+      <div class="card">
+        <h2>Instruções para o Envio</h2>
+        <p class="h2-sub">A documentação foi dividida em três categorias conforme o edital. Agrupe os comprovantes de cada categoria em um único arquivo PDF antes de enviar.</p>
+        </div>
+    </div>
+  </section>
+  <br>
+  <section id="registro" style="padding-top: 0;">
+    <div class="container">
+      <div class="card">
+        <div id="form-registro">
+          <label for="nome">Nome Completo do Candidato *</label>
+          <input type="text" id="nome" maxlength="150" required>
+
+          <label for="cpf">CPF *</label>
+          <input type="text" id="cpf" maxlength="14" required>
+
+          <label for="email">E-mail *</label>
+          <input type="email" id="email" maxlength="150" required>
+
+          <hr style="margin: 30px 0; border: 0; border-top: 1px solid var(--linha);">
+          
+          <h3>Arquivos do Edital</h3>
+
+          <label for="arquivo_g1">Grupo 1: Atividades de titulação e atuação profissional (PDF)</label>
+          <input type="file" id="arquivo_g1" accept="application/pdf">
+          <p class="hint">Máximo 05 MB. Apenas arquivo PDF.</p>
+
+          <label for="arquivo_g2">Grupo 2: Produção científica (PDF)</label>
+          <input type="file" id="arquivo_g2" accept="application/pdf">
+          <p class="hint">Máximo 05 MB. Apenas arquivo PDF.</p>
+
+          <label for="arquivo_g3">Grupo 3: Propriedade Intelectual, Desenvolvimento e Produções (PDF)</label>
+          <input type="file" id="arquivo_g3" accept="application/pdf">
+          <p class="hint">Máximo 05 MB. Apenas arquivo PDF.</p>
+
+          <br>
+          <div class="check-linha">
+            <input type="checkbox" id="decl-veracidade">
+            <label for="decl-veracidade" style="margin:0;font-weight:400">Declaro que os dados informados são verdadeiros e anexei os documentos autênticos. *</label>
+          </div>
+          
+          <button type="button" class="botao" id="btn-enviar-registro" onclick="enviarInscricao()">Enviar Documentos</button>
+          
+          <!-- Elemento da Barra de Progresso -->
+          <div id="progresso-container">
+            <div class="progresso-header">
+              <span id="progresso-texto">Iniciando envio...</span>
+              <span id="progresso-porcentagem">0%</span>
+            </div>
+            <div class="progresso-fundo">
+              <div id="progresso-barra"></div>
+            </div>
+          </div>
+
+          <div id="resultado-registro"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <strong>Programa de Pós-Graduação Stricto Sensu em Design — PDS/UEM</strong><br>
+      Universidade Estadual de Maringá · Cianorte, Paraná
+    </div>
+  </footer>
+
+  <script>
+    // IMPORTANTE: Cole a URL gerada pelo Google Apps Script (Nova Implantação) aqui
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyx2575a9BCS4d8W3HndAwA3zu4fi56oHDwtar5xWPA3Yb4zb6ABNQgPjlXu2GXENRj/exec";
+
+    function lerArquivoBase64(input) {
+      return new Promise((res, rej) => {
+        const f = input.files[0];
+        if (!f) return res(null); 
+        if (f.type !== "application/pdf") return rej("Todos os documentos devem ser arquivos PDF.");
+        if (f.size > 5 * 1024 * 1024) return rej(`O arquivo ${f.name} excede o limite de 05 MB.`);
+
+        const r = new FileReader();
+        r.onload = () => res({
+            nome: f.name,
+            mimeType: f.type,
+            base64: r.result.split(",")[1]
+        });
+        r.onerror = () => rej("Erro ao ler o arquivo.");
+        r.readAsDataURL(f);
+      });
+    }
+
+    // Função auxiliar para atualizar a interface da barra
+    function atualizarProgresso(porcentagem, texto) {
+      document.getElementById("progresso-barra").style.width = porcentagem + "%";
+      document.getElementById("progresso-porcentagem").textContent = porcentagem + "%";
+      if(texto) document.getElementById("progresso-texto").textContent = texto;
+    }
+
+    async function enviarInscricao() {
+      const out = document.getElementById("resultado-registro");
+      const progressoContainer = document.getElementById("progresso-container");
+      const btn = document.getElementById("btn-enviar-registro");
+      
+      const nome = document.getElementById("nome").value.trim();
+      const cpf = document.getElementById("cpf").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const declVeracidade = document.getElementById("decl-veracidade").checked;
+
+      const inputG1 = document.getElementById("arquivo_g1");
+      const inputG2 = document.getElementById("arquivo_g2");
+      const inputG3 = document.getElementById("arquivo_g3");
+
+      if (!nome || !cpf || !email) {
+        out.innerHTML = '<div class="msg-erro">Preencha todos os campos obrigatórios de dados pessoais.</div>';
+        return;
+      }
+
+      if (!inputG1.files.length && !inputG2.files.length && !inputG3.files.length) {
+        out.innerHTML = '<div class="msg-erro">Anexe pelo menos um arquivo PDF de comprovação do edital.</div>';
+        return;
+      }
+
+      if (!declVeracidade) {
+        out.innerHTML = '<div class="msg-erro">É necessário confirmar a declaração de veracidade dos dados.</div>';
+        return;
+      }
+
+      // Preparação da UI para o envio
+      btn.disabled = true;
+      btn.textContent = "Processando...";
+      out.innerHTML = "";
+      progressoContainer.style.display = "block";
+      atualizarProgresso(10, "Lendo arquivos...");
+
+      let simuladorProgresso; // Variável para o simulador de carregamento
+
+      try {
+        const [arqG1, arqG2, arqG3] = await Promise.all([
+          lerArquivoBase64(inputG1),
+          lerArquivoBase64(inputG2),
+          lerArquivoBase64(inputG3)
+        ]);
+
+        atualizarProgresso(30, "Enviando dados para o servidor...");
+
+        // Inicia um simulador visual: sobe 5% a cada 1,5s enquanto espera o servidor
+        let progAtual = 30;
+        simuladorProgresso = setInterval(() => {
+          if (progAtual < 90) {
+            progAtual += 5;
+            atualizarProgresso(progAtual, "Salvando arquivos no Drive (pode levar alguns segundos)...");
+          }
+        }, 1500);
+
+        const resp = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            nome,
+            cpf,
+            email,
+            documentos: {
+              grupo1: arqG1,
+              grupo2: arqG2,
+              grupo3: arqG3
+            }
+          })
+        });
+
+        // Para o simulador quando o servidor responde
+        clearInterval(simuladorProgresso);
+        const dados = await resp.json();
+
+        if (dados.ok) {
+          atualizarProgresso(100, "Concluído!");
+          
+          setTimeout(() => {
+            progressoContainer.style.display = "none";
+            out.innerHTML = `<div class="msg-ok"><strong>Documentos enviados com sucesso!</strong><br>Sua inscrição no processo seletivo foi registrada.</div>`;
+            
+            // Limpa o formulário
+            document.getElementById("nome").value = "";
+            document.getElementById("cpf").value = "";
+            document.getElementById("email").value = "";
+            document.getElementById("decl-veracidade").checked = false;
+            inputG1.value = "";
+            inputG2.value = "";
+            inputG3.value = "";
+          }, 800); // Aguarda um instante para o usuário ver os 100%
+
+        } else {
+          progressoContainer.style.display = "none";
+          out.innerHTML = `<div class="msg-erro">Erro no servidor: ${dados.erro}</div>`;
+        }
+      } catch (e) {
+        clearInterval(simuladorProgresso);
+        progressoContainer.style.display = "none";
+        out.innerHTML = `<div class="msg-erro">${typeof e === "string" ? e : "Erro de conexão ao enviar os arquivos. Tente novamente."}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Enviar Documentos";
+      }
+    }
+  </script>
+</body>
+</html>
